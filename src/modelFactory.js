@@ -256,6 +256,12 @@ module.provider('$modelFactory', function(){
 
     function BaseModel () {}
     function BaseCollection () {}
+    function isBaseModel(v) {
+      return v && v.prototype && BaseModel.prototype.isPrototypeOf(v.prototype);
+    }
+    function isBaseCollection (v) {
+      return v && v.prototype && BaseCollection.prototype.isPrototypeOf(v.prototype);
+    }
 
     provider.$get = ['$rootScope', '$http', '$q', '$log', '$cacheFactory', function($rootScope, $http, $q, $log, $cacheFactory) {
 
@@ -311,7 +317,7 @@ module.provider('$modelFactory', function(){
                     if(v === null || v === undefined) return;
 
                     // reset to new instance
-                    value[i] = wrapAsNewModelInstance(v, value);
+                    value[i] = wrapAsNewModelInstance(v, value, ModelCollection.Model);
                 });
 
                 // override push to set an instance
@@ -340,10 +346,11 @@ module.provider('$modelFactory', function(){
             // helper function for creating a new instance of a model from
             // a raw JavaScript obj. If it is already a model, it will be left
             // as it is
-            var  wrapAsNewModelInstance = function(rawObj, arrayInst){
+            var  wrapAsNewModelInstance = function(rawObj, arrayInst, ModelConstructor){
+                ModelConstructor = isBaseModel(ModelConstructor)? ModelConstructor : Model;
                 // create an instance
-                var inst = rawObj.constructor === Model ?
-                    rawObj : new Model(rawObj);
+                var inst = rawObj.constructor === ModelConstructor ?
+                    rawObj : new ModelConstructor(rawObj);
 
                 // set a pointer to the array
                 inst.$$array = arrayInst;
@@ -394,11 +401,7 @@ module.provider('$modelFactory', function(){
 
                 // Map all the objects to new names or relationships
                 forEach(options.map, function(v, k){
-                    if (
-                      v && v.prototype &&
-                      BaseModel.prototype.isPrototypeOf(v.prototype) ||
-                      BaseCollection.prototype.isPrototypeOf(v.prototype)
-                    ) {
+                    if ( isBaseModel(v) || isBaseCollection(v) ) {
                         value[k] = new v(value[k]); // jshint ignore:line
                     } else if (typeof v === 'function') {
                         // if its a function, invoke it,
