@@ -1,6 +1,6 @@
 /**
  * modelFactory makes working with RESTful APIs in AngularJS easy
- * @version v1.0.3 - 2015-11-09
+ * @version v1.0.4 - 2018-04-07
  * @link http://swimlane.github.io/angular-model-factory/
  * @author Austin McDaniel <amcdaniel2@gmail.com>, Juri Strumpflohner <juri.strumpflohner@gmail.com>
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -443,7 +443,8 @@
 var module = angular.module('modelFactory', []);
 
 // compression
-var forEach = angular.forEach,
+var isUndefined = angular.isUndefined,
+    forEach = angular.forEach,
     extend = angular.extend,
     copy = angular.copy;
 
@@ -1021,7 +1022,9 @@ module.provider('$modelFactory', function(){
 
                     // if we have a url defined, append to base
                     if(clone.url) {
-                        uri += '/' + clone.url;
+                        //check if we need to add slash, or we only duplicate it
+                        var requiredSlash = !/^(\/|{\/)/.test(clone.url);
+                        uri += requiredSlash ? '/' + clone.url : clone.url;
                     }
 
 
@@ -1030,7 +1033,7 @@ module.provider('$modelFactory', function(){
 
                     // attach the pk referece by default if it is a 'core' type
                     if(action === 'get' || action === 'post' || action === 'update' || action === 'delete'){
-                        uri += '/{' + options.pk + '}';
+                        uri += '{/' + options.pk + '}';
                     }
 
                     if(clone.method === 'GET' && (angular.isString(data) || angular.isNumber(data))){
@@ -1076,7 +1079,7 @@ module.provider('$modelFactory', function(){
              */
             Model.$call = function(params){
                 // if we have the promise in queue, return it
-                var signature = params.method + ':' + params.url;
+                var signature = params.method + ':' + params.url + ':' + angular.toJson(params.params);
                 if (promiseTracker[signature]) {
                     return promiseTracker[signature];
                 }
@@ -1102,7 +1105,7 @@ module.provider('$modelFactory', function(){
                     // after callbacks
                     if(params.afterRequest) {
                         var transform = params.afterRequest(response.data);
-                        if(transform) {
+                        if(!isUndefined(transform)) {
                             response.data = transform;
                         }
                     }

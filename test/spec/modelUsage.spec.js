@@ -715,6 +715,11 @@ describe('A person model defined using modelFactory', function() {
                               url: 'child/{name}/some/subpath'
                           },
 
+                          deleteLink: {
+                              method: 'DELETE',
+                              url: 'path/{id}/links/{linkId}'
+                          },
+
                           // instance function
                           '$serverCopy': {
                               method: 'POST',
@@ -742,6 +747,14 @@ describe('A person model defined using modelFactory', function() {
             PersonModel.getById({ id: 123 });
 
             $httpBackend.expectGET('/api/people/child/123/some/subpath').respond(200, []);
+            $httpBackend.flush();
+        });
+
+
+        it('should properly convert a static DELETE request', function(){
+            PersonModel.deleteLink({ id: 123, linkId: '111' });
+
+            $httpBackend.expectDELETE('/api/people/path/123/links/111').respond(200, []);
             $httpBackend.flush();
         });
 
@@ -1190,6 +1203,148 @@ describe('A person model defined using modelFactory', function() {
             expect(contact.Addresses[0].Phones.length).toEqual(0);
         });
 
+    });
+
+    describe('when afterRequest returns data', function () {
+        var DummyGetModel, $httpBackend;
+        beforeEach(function () {
+            angular.module('test-module', ['modelFactory'])
+                .factory('DummyGetModel', function ($modelFactory) {
+                    return $modelFactory('/test/get/afterRequestTest', {
+                        actions: {
+                            get: {
+                                wrap:false,
+                                afterRequest: function (res) {
+                                    return res.data.newData;
+                                }
+                            }
+                        }
+                    });
+                });
+        });
+
+        beforeEach(angular.mock.module('test-module'));
+
+        beforeEach(inject(function (_DummyGetModel_, _$httpBackend_) {
+            DummyGetModel = _DummyGetModel_;
+            $httpBackend = _$httpBackend_;
+        }));
+
+        it('should reset data if returns null', function(){
+            DummyGetModel.get(1).then(function(data){
+               expect(data).toBeNull();
+            });
+
+            $httpBackend.expectGET('/test/get/afterRequestTest/1').respond(200, {
+                'data': {
+                    newData: null
+                }
+            });
+            $httpBackend.flush();
+        });
+
+        it('should reset data if returns 0', function(){
+            DummyGetModel.get(1).then(function(data){
+                expect(data).toBe(0);
+            });
+
+            $httpBackend.expectGET('/test/get/afterRequestTest/1').respond(200, {
+                'data': {
+                    newData: 0
+                }
+            });
+            $httpBackend.flush();
+        });
+
+        it('should reset data if returns ""', function(){
+            DummyGetModel.get(1).then(function(data){
+                expect(data).toBe('');
+            });
+
+            $httpBackend.expectGET('/test/get/afterRequestTest/1').respond(200, {
+                'data': {
+                    newData: ''
+                }
+            });
+            $httpBackend.flush();
+        });
+
+        it('should not reset data if returns undefined', function(){
+            DummyGetModel.get(1).then(function(data){
+                expect(data.newData).toBe();
+            });
+
+            $httpBackend.expectGET('/test/get/afterRequestTest/1').respond(200, {
+                'data': {
+                    newData: undefined
+                }
+            });
+            $httpBackend.flush();
+        });
+    });
+
+
+    describe('when action url (or action template url) contains slash', function () {
+        var DummyGetModel, $httpBackend;
+        beforeEach(function () {
+            angular.module('test-module', ['modelFactory'])
+                .factory('DummyGetModel', function ($modelFactory) {
+                    return $modelFactory('/test/get/actionSlashTest', {
+                        actions: {
+                            get: {
+                                url: '{/templateParam,templateParam2}'
+                            },
+                            query: {
+                                url: '/simpleUrl'
+                            }
+                        }
+                    });
+                });
+        });
+
+        beforeEach(angular.mock.module('test-module'));
+
+        beforeEach(inject(function (_DummyGetModel_, _$httpBackend_) {
+            DummyGetModel = _DummyGetModel_;
+            $httpBackend = _$httpBackend_;
+        }));
+
+        it('should build query with template params and no duplicate slashes', function () {
+            DummyGetModel.get({
+                templateParam: '123',
+                templateParam2: '456'
+            });
+
+            $httpBackend.expectGET('/test/get/actionSlashTest/123/456').respond(200);
+            $httpBackend.flush();
+        });
+
+        it('should set pk as query param, if we have path params as template', function () {
+            DummyGetModel.get({
+                templateParam: '123',
+                templateParam2: '456',
+                id: 0
+            });
+
+            $httpBackend.expectGET('/test/get/actionSlashTest/123/456?id=0').respond(200);
+            $httpBackend.flush();
+        });
+
+        it('should query data without duplicate slash', function () {
+            DummyGetModel.query();
+
+            $httpBackend.expectGET('/test/get/actionSlashTest/simpleUrl').respond(200);
+            $httpBackend.flush();
+        });
+
+        it('should query data without duplicate slash and add query params', function () {
+            DummyGetModel.query({
+                query: 'param'
+            });
+
+            $httpBackend.expectGET('/test/get/actionSlashTest/simpleUrl?query=param').respond(200);
+            $httpBackend.flush();
+        });
     });
 
     describe('regression test',function(){
