@@ -24,7 +24,9 @@
     "karma-phantomjs-launcher": "~0.1.4",
     "ng-annotate": "^1.0.2",
     "publish-latest": "^1.1.2",
-    "semantic-release": "^4.3.5"
+    "semantic-release": "^4.3.5",
+    "angular-mocks": "1.x",
+    "angular-scenario": "1.x"
   },
   "main": "./dist/angular-model-factory.js",
   "scripts": {
@@ -39,7 +41,9 @@
     "url": "https://github.com/bullwinkle/angular-model-factory.git"
   },
   "dependencies": {
-    "bower": "^1.8.4"
+    "uri-templates": "~0.1.5",
+    "deep-diff": "~0.2.0",
+    "angular": "*"
   },
-  "version": "1.0.4"
+  "version": "1.0.5"
 }

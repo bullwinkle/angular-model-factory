@@ -84,10 +84,10 @@ Get a fresh copy of this repo.
 
 ### Prepare your environment
 * Install [Node.js](http://nodejs.org/) and NPM (should come with)
-* Install global dev dependencies: `npm install -g bower grunt-cli`
-* Install local dev dependencies: `npm install && bower install` in repository directory
+* Install global dev dependencies: `npm install grunt-cli`
+* Install local dev dependencies: `npm install` in repository directory
 
 ### Development Commands
-* `grunt build` to concat and build
-* `grunt karma` for continuous testing mode with karma (useful during development as tests will be run on each change)
-* `grunt karma:ci` for a one-time execution of the tests (used by Travis)
+* `.node_modules/.bin/grunt build` to concat and build
+* `.node_modules/.bin/grunt karma` for continuous testing mode with karma (useful during development as tests will be run on each change)
+* `.node_modules/.bin/grunt karma:ci` for a one-time execution of the tests (used by Travis)
