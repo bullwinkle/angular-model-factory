@@ -254,6 +254,9 @@ module.provider('$modelFactory', function(){
         list: {}
     };
 
+    function BaseModel () {}
+    function BaseCollection () {}
+
     provider.$get = ['$rootScope', '$http', '$q', '$log', '$cacheFactory', function($rootScope, $http, $q, $log, $cacheFactory) {
 
         /**
@@ -331,7 +334,8 @@ module.provider('$modelFactory', function(){
                 }
 
                 return value;
-            };
+            }
+            ModelCollection.prototype = Object.create(BaseCollection.prototype);
 
             // helper function for creating a new instance of a model from
             // a raw JavaScript obj. If it is already a model, it will be left
@@ -390,7 +394,11 @@ module.provider('$modelFactory', function(){
 
                 // Map all the objects to new names or relationships
                 forEach(options.map, function(v, k){
-                    if (functionName(v) === functionName(Model) || functionName(v) === functionName(ModelCollection)) {
+                    if (
+                      v && v.prototype &&
+                      BaseModel.prototype.isPrototypeOf(v.prototype) ||
+                      BaseCollection.prototype.isPrototypeOf(v.prototype)
+                    ) {
                         value[k] = new v(value[k]); // jshint ignore:line
                     } else if (typeof v === 'function') {
                         // if its a function, invoke it,
@@ -540,6 +548,7 @@ module.provider('$modelFactory', function(){
                 // like default values and whatnot.
                 instance.$commit();
             }
+            Model.prototype = Object.create(BaseModel.prototype);
 
             //
             // Model Static
