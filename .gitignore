@@ -1,8 +1,8 @@
 node_modules/
 bower_components/
 jspm_packages/
-.idea/*
+.idea
 _site/
 typings/
-dist/
+dist
 *.log
